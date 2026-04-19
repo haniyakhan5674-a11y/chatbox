@@ -2,127 +2,504 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>DarkChat • Sleek Messenger</title>
+    <!-- Socket.IO client library -->
+    <script src="/socket.io/socket.io.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-    font-family: Arial;
-    background: #f3f4f6;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            background: #bfcbef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
 
-#chat-container {
-    width: 350px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    overflow: hidden;
-}
+        /* Compact chat container — dark premium theme */
+        #chat-container {
+            width: 100%;
+            max-width: 400px;
+            height: 550px;
+            background: #0f1117;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s;
+        }
 
-#chat-box {
-    height: 300px;
-    overflow-y: auto;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-}
+        /* Sleek header */
+        .chat-header {
+            background: #0b0e14;
+            padding: 14px 18px;
+            border-bottom: 1px solid #1e212a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-.msg {
-    padding: 8px;
-    margin: 5px;
-    border-radius: 8px;
-    max-width: 70%;
-}
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px #0f1117, 0 0 0 4px rgba(16, 185, 129, 0.25);
+            animation: softPulse 1.8s infinite;
+        }
 
-.me {
-    background: #4f46e5;
-    color: white;
-    margin-left: auto;
-}
+        @keyframes softPulse {
+            0% { opacity: 1; transform: scale(1);}
+            50% { opacity: 0.7; transform: scale(1.1);}
+            100% { opacity: 1; transform: scale(1);}
+        }
 
-.other {
-    background: #e5e7eb;
-}
+        .chat-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            background: linear-gradient(135deg, #e0e7ff, #a5b4fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
 
-#input-area {
-    display: flex;
-}
+        .chat-badge {
+            background: #261c1a;
+            border-radius: 30px;
+            padding: 4px 10px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #9ca3af;
+            margin-left: auto;
+            letter-spacing: 0.3px;
+        }
 
-#msginput {
-    flex: 1;
-    padding: 10px;
-    border: none;
-}
+        /* Chat bubbles area — dark scroll */
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 14px 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #0f1117;
+            scroll-behavior: smooth;
+        }
 
-#btn {
-    padding: 10px;
-    background: #4f46e5;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
+        /* custom scroll (dark) */
+        #chat-box::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: #191e26;
+            border-radius: 10px;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background: #2d3340;
+            border-radius: 10px;
+        }
+
+        /* message bubble base */
+        .msg {
+            max-width: 78%;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            line-height: 1.35;
+            word-wrap: break-word;
+            animation: fadeSlide 0.2s ease-out;
+            position: relative;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* my message (sender) dark gradient */
+        .msg.me {
+            background: linear-gradient(115deg, #2563eb, #3b82f6);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        }
+
+        /* other user message */
+        .msg.other {
+            background: #1e2129;
+            color: #e5e7eb;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            border: 0.5px solid #2a2e3a;
+        }
+
+        /* timestamp inside bubble */
+        .msg-time {
+            font-size: 0.6rem;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: block;
+            letter-spacing: 0.2px;
+            text-align: right;
+        }
+
+        .me .msg-time {
+            color: rgba(255,255,245,0.8);
+        }
+
+        .other .msg-time {
+            color: #9ca3af;
+        }
+
+        /* compact input area */
+        #input-area {
+            background: #0b0e14;
+            border-top: 1px solid #1e212a;
+            padding: 12px 16px 16px 16px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #msginput {
+            flex: 1;
+            border: 1px solid #252a35;
+            background: #0f1117;
+            padding: 10px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s;
+            color: #f1f5f9;
+        }
+
+        #msginput:focus {
+            border-color: #3b82f6;
+            background: #12151f;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        #msginput::placeholder {
+            color: #4b5565;
+        }
+
+        #btn {
+            background: #2563eb;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        #btn:hover {
+            background: #1d4ed8;
+            transform: scale(0.97);
+        }
+
+        #btn:active {
+            transform: scale(0.95);
+        }
+
+        /* welcome placeholder (dark) */
+        .welcome-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-top: 32px;
+            background: #b1bfda;
+            padding: 8px 14px;
+            border-radius: 40px;
+            width: 85%;
+            align-self: center;
+        }
+
+        /* typing indicator dark */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #1a1e28;
+            width: fit-content;
+            padding: 6px 12px;
+            border-radius: 40px;
+            margin-top: 4px;
+            font-size: 0.65rem;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        .typing-dot {
+            width: 5px;
+            height: 5px;
+            background: #60a5fa;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounceDark 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounceDark {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* compact spacing */
+        @media (max-width: 450px) {
+            #chat-container {
+                height: 560px;
+            }
+            .msg {
+                max-width: 85%;
+                font-size: 0.8rem;
+            }
+            #btn {
+                padding: 8px 16px;
+            }
+        }
     </style>
-    <body>
-    <h1>chating app</h1>
+</head>
+<body>
 <div id="chat-container">
-    <div id="chat-box"></div>
-
+    <div class="chat-header">
+        <div class="status-dot"></div>
+        <h3>✦ DarkChat</h3>
+        <div class="chat-badge">live</div>
+    </div>
+    <div id="chat-box">
+        <div class="welcome-message" id="welcomeMsg">
+            🌙 say hi · real-time chat
+        </div>
+    </div>
     <div id="input-area">
-        <input type="text" id="msginput" placeholder="Enter your msg">
-        <button id="btn">Send</button>
+        <input type="text" id="msginput" placeholder="Message..." autocomplete="off">
+        <button id="btn">➤ Send</button>
     </div>
 </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-     const socket = io();
+<script>
+    // Socket.IO connection (expects server on same origin)
+    const socket = io();
 
-const msgInput = document.querySelector("#msginput");
-const sendBtn = document.querySelector("#btn");
-const chatBox = document.querySelector("#chat-box");
+    // DOM refs
+    const msgInput = document.querySelector("#msginput");
+    const sendBtn = document.querySelector("#btn");
+    const chatBox = document.querySelector("#chat-box");
+    const welcomeEl = document.getElementById("welcomeMsg");
 
-// receive message from server
-socket.on("message", (message) => {
-    addMessage(message, "other");
-});
-
-// send message on button click
-sendBtn.addEventListener("click", sendMessage);
-
-// send message on Enter key
-msgInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-        sendMessage();
+    let hasMessages = false;
+    function removeWelcome() {
+        if (welcomeEl && !hasMessages) {
+            welcomeEl.style.display = "none";
+            hasMessages = true;
+        }
     }
-});
 
-function sendMessage() {
-    const message = msgInput.value.trim();
+    // compact time formatter
+    function getShortTime() {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        return `${hours}:${minutes} ${ampm}`;
+    }
 
-    if (!message) return;
+    // add message bubble with timestamp
+    function addMessage(text, type, customTime = null) {
+        removeWelcome();
+        const bubble = document.createElement("div");
+        bubble.classList.add("msg", type);
+        bubble.textContent = text;
+        
+        const timeSpan = document.createElement("span");
+        timeSpan.classList.add("msg-time");
+        timeSpan.textContent = customTime || getShortTime();
+        bubble.appendChild(timeSpan);
+        
+        chatBox.appendChild(bubble);
+        // smooth scroll
+        bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-    addMessage(message, "me");
-    socket.emit("message", message);
+    // ---------- Typing indicators (dark + subtle) ----------
+    let typingIndicatorElem = null;
+    let typingHideTimer = null;
 
-    msgInput.value = "";
-}
+    function showTyping() {
+        if (typingIndicatorElem) typingIndicatorElem.remove();
+        typingIndicatorElem = document.createElement("div");
+        typingIndicatorElem.classList.add("typing-indicator");
+        typingIndicatorElem.innerHTML = `
+            <span>✎ typing</span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+        `;
+        typingIndicatorElem.style.alignSelf = "flex-start";
+        typingIndicatorElem.style.marginLeft = "8px";
+        chatBox.appendChild(typingIndicatorElem);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-function addMessage(text, type) {
-    const p = document.createElement("p");
-    p.textContent = text;
+    function hideTyping() {
+        if (typingIndicatorElem) {
+            typingIndicatorElem.remove();
+            typingIndicatorElem = null;
+        }
+        if (typingHideTimer) clearTimeout(typingHideTimer);
+    }
 
-    // add CSS classes
-    p.classList.add("msg", type);
+    // Emit typing events to server
+    let typingDebounce;
+    msgInput.addEventListener("input", () => {
+        if (!socket) return;
+        socket.emit("typing");
+        clearTimeout(typingDebounce);
+        typingDebounce = setTimeout(() => {
+            socket.emit("stopTyping");
+        }, 700);
+    });
 
-    chatBox.appendChild(p);
+    // Server broadcast: remote user typing
+    socket.on("userTyping", () => {
+        showTyping();
+        clearTimeout(typingHideTimer);
+        typingHideTimer = setTimeout(() => {
+            hideTyping();
+        }, 1500);
+    });
 
-    // auto scroll
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-   </script>
+    socket.on("userStopTyping", () => {
+        hideTyping();
+    });
+
+    // receive message from server
+    socket.on("message", (msgData) => {
+        let messageText = typeof msgData === 'string' ? msgData : msgData.text;
+        let timestamp = msgData?.timestamp || null;
+        if (!messageText) return;
+        addMessage(messageText, "other", timestamp || getShortTime());
+        hideTyping(); // remote user stopped typing after sending
+    });
+
+    // send message core
+    function sendMessage() {
+        const rawMsg = msgInput.value.trim();
+        if (!rawMsg) return;
+
+        // add my bubble instantly
+        addMessage(rawMsg, "me");
+        // emit to server with nice payload
+        socket.emit("message", {
+            text: rawMsg,
+            timestamp: getShortTime(),
+        });
+        
+        msgInput.value = "";
+        msgInput.focus();
+        // stop any typing indicator that might be active
+        socket.emit("stopTyping");
+        hideTyping();
+    }
+
+    // event bindings
+    sendBtn.addEventListener("click", sendMessage);
+    msgInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // connection status badge update (dark theme style)
+    socket.on("connect", () => {
+        const badge = document.querySelector(".chat-badge");
+        if (badge) {
+            badge.textContent = "● live";
+            badge.style.color = "#10b981";
+            badge.style.background = "#0f1a1a";
+        }
+    });
+
+    socket.on("disconnect", () => {
+        const badge = document.querySelector(".chat-badge");
+        if (badge) {
+            badge.textContent = "⟳ offline";
+            badge.style.color = "#f87171";
+            badge.style.background = "#1f1215";
+        }
+        // small temporary notification in chat
+        const offlineMsg = document.createElement("div");
+        offlineMsg.textContent = "⚠️ disconnected · reconnecting";
+        offlineMsg.style.background = "#1f1a2e";
+        offlineMsg.style.fontSize = "0.65rem";
+        offlineMsg.style.padding = "5px 12px";
+        offlineMsg.style.borderRadius = "30px";
+        offlineMsg.style.textAlign = "center";
+        offlineMsg.style.margin = "6px auto";
+        offlineMsg.style.color = "#cbd5e1";
+        offlineMsg.style.width = "fit-content";
+        chatBox.appendChild(offlineMsg);
+        setTimeout(() => offlineMsg.remove(), 2800);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    socket.on("connect_error", () => {
+        console.log("⚠️ Socket server unreachable — run node server");
+    });
+
+    // auto focus on load
+    window.addEventListener("load", () => {
+        msgInput.focus();
+    });
+
+    // if server not running, show a friendly hint after short delay
+    setTimeout(() => {
+        if (!socket.connected) {
+            const hint = document.createElement("div");
+            hint.textContent = "💡 start socket server to chat live";
+            hint.style.background = "#1f1b2c";
+            hint.style.fontSize = "0.65rem";
+            hint.style.padding = "5px 12px";
+            hint.style.borderRadius = "50px";
+            hint.style.margin = "8px auto";
+            hint.style.color = "#a78bfa";
+            hint.style.width = "auto";
+            hint.style.textAlign = "center";
+            chatBox.appendChild(hint);
+            setTimeout(() => hint.remove(), 5000);
+        }
+    }, 700);
+</script>
 </body>
 </html>
