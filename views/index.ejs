@@ -2,575 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Lumina Chat | Modern Messaging</title>
-    <!-- Google Fonts for a refined typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
-    <!-- Font Awesome 6 (free icons) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(145deg, #d9d2b0 0%, #e1b208 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            position: relative;
-        }
-
-        /* subtle animated background grain */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(rgba(147, 126, 20, 0.05) 1px, transparent 1px);
-            background-size: 24px 24px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* main chat container — glassmorphism + elegant shadows */
-        #chat-container {
-            width: 100%;
-            max-width: 460px;
-            background: rgba(255, 248, 225, 0.96);
-            backdrop-filter: blur(2px);
-            border-radius: 36px;
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(255, 245, 215, 0.7);
-        }
-
-        /* header area — elegant brand */
-        .chat-header {
-            background: #ffffffdd;
-            backdrop-filter: blur(12px);
-            padding: 18px 24px;
-            border-bottom: 1px solid #f0e2c5;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .avatar {
-            background: linear-gradient(135deg, #aa7e4a, #6b4c2c);
-            width: 44px;
-            height: 44px;
-            border-radius: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-        }
-
-        .avatar i {
-            font-size: 24px;
-            color: #fef3d6;
-        }
-
-        .header-text h2 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #3a2a1f;
-            letter-spacing: -0.3px;
-        }
-
-        .header-text p {
-            font-size: 0.75rem;
-            color: #8b7652;
-            font-weight: 500;
-            margin-top: 2px;
-        }
-
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-left: auto;
-            background: #e7e0ca;
-            padding: 6px 12px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: #4c3a24;
-        }
-
-        .status-badge i {
-            font-size: 10px;
-            color: #3cab5b;
-        }
-
-        /* chat box — smooth scrolling & custom scrollbar */
-        #chat-box {
-            height: 380px;
-            overflow-y: auto;
-            padding: 20px 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: #fefaf0;
-            scroll-behavior: smooth;
-        }
-
-        /* custom scrollbar (beautiful) */
-        #chat-box::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        #chat-box::-webkit-scrollbar-track {
-            background: #ede5cf;
-            border-radius: 10px;
-        }
-
-        #chat-box::-webkit-scrollbar-thumb {
-            background: #c7af82;
-            border-radius: 10px;
-        }
-
-        /* message bubble base */
-        .msg {
-            padding: 10px 16px;
-            border-radius: 24px;
-            max-width: 80%;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            font-weight: 500;
-            word-wrap: break-word;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
-            transition: all 0.1s ease;
-            animation: fadeSlideUp 0.25s ease-out;
-        }
-
-        /* my messages (sender) */
-        .me {
-            background: linear-gradient(115deg, #c28234, #a56321);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 6px;
-            border-top-right-radius: 24px;
-            border-top-left-radius: 24px;
-            border-bottom-left-radius: 24px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        /* other messages (receiver) */
-        .other {
-            background: white;
-            color: #2e241a;
-            align-self: flex-start;
-            border-bottom-left-radius: 6px;
-            border-top-left-radius: 24px;
-            border-top-right-radius: 24px;
-            border-bottom-right-radius: 24px;
-            border: 1px solid #f1e2ca;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-        }
-
-        /* message timestamp simulation (extra touch) */
-        .msg-time {
-            font-size: 0.6rem;
-            opacity: 0.7;
-            margin-top: 5px;
-            display: block;
-            font-weight: 400;
-            letter-spacing: 0.2px;
-        }
-
-        .me .msg-time {
-            text-align: right;
-            color: #ffefcf;
-        }
-
-        .other .msg-time {
-            color: #ab9476;
-        }
-
-        /* animation for new messages */
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(12px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* input area — modern & elegant */
-        #input-area {
-            display: flex;
-            align-items: center;
-            background: #ffffff;
-            border-top: 1px solid #efeadb;
-            padding: 12px 18px;
-            gap: 12px;
-            backdrop-filter: blur(4px);
-        }
-
-        #msginput {
-            flex: 1;
-            padding: 14px 18px;
-            border: none;
-            background: #f8f3e8;
-            border-radius: 48px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #2f241b;
-            outline: none;
-            transition: all 0.2s;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02), 0 0 0 1px #e7decb;
-        }
-
-        #msginput:focus {
-            background: #ffffff;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02), 0 0 0 2px #dbb876;
-        }
-
-        #btn {
-            background: #7c5a38;
-            border: none;
-            width: 48px;
-            height: 48px;
-            border-radius: 48px;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        #btn i {
-            font-size: 1.2rem;
-        }
-
-        #btn:hover {
-            background: #9b6e42;
-            transform: scale(0.96);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        #btn:active {
-            transform: scale(0.94);
-        }
-
-        /* welcome / empty state subtle */
-        .empty-chat-hint {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #cbbf9c;
-            padding: 40px 20px;
-            font-weight: 500;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .empty-chat-hint i {
-            font-size: 38px;
-            opacity: 0.6;
-        }
-
-        /* small responsiveness */
-        @media (max-width: 480px) {
-            #chat-container {
-                max-width: 100%;
-                border-radius: 28px;
-            }
-            #chat-box {
-                height: 420px;
-                padding: 16px;
-            }
-            .msg {
-                max-width: 85%;
-                font-size: 0.85rem;
-            }
-            .chat-header {
-                padding: 14px 18px;
-            }
-        }
-
-        /* typing indicator (just for fun / future expansion, but adds charm) */
-        .typing-indicator {
-            background: rgb(223, 149, 149);
-            border-radius: 20px;
-            padding: 8px 15px;
-            width: fit-content;
-            font-size: 0.75rem;
-            color: #ad8f67;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid #efe2ce;
-            margin-bottom: 5px;
-        }
-
-        .dot-floating {
-            display: flex;
-            gap: 3px;
-        }
-
-        .dot-floating span {
-            width: 6px;
-            height: 6px;
-            background-color: #b68b54;
-            border-radius: 50%;
-            display: inline-block;
-            animation: wave 1.2s infinite ease-in-out both;
-        }
-
-        .dot-floating span:nth-child(1) { animation-delay: -0.32s; }
-        .dot-floating span:nth-child(2) { animation-delay: -0.16s; }
-
-        @keyframes wave {
-            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
-            40% { transform: scale(1); opacity: 1; }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 </head>
-<body>
 
+    <style>
+        body {
+    font-family: Arial;
+    background: #f3f4f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#chat-container {
+    width: 350px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+#chat-box {
+    height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.msg {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 8px;
+    max-width: 70%;
+}
+
+.me {
+    background: #4f46e5;
+    color: white;
+    margin-left: auto;
+}
+
+.other {
+    background: #e5e7eb;
+}
+
+#input-area {
+    display: flex;
+}
+
+#msginput {
+    flex: 1;
+    padding: 10px;
+    border: none;
+}
+
+#btn {
+    padding: 10px;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+    </style>
+    <body>
+    <h1>chating app</h1>
 <div id="chat-container">
-    <!-- Header with stylish details -->
-    <div class="chat-header">
-        <div class="avatar">
-            <i class="fas fa-comments"></i>
-        </div>
-        <div class="header-text">
-            <h2>Haniya's ChatBox</h2>
-            <p>live • cozy conversation</p>
-        </div>
-        <div class="status-badge">
-            <i class="fas fa-circle"></i>
-            <span>connected</span>
-        </div>
-    </div>
+    <div id="chat-box"></div>
 
-    <!-- dynamic message area -->
-    <div id="chat-box">
-        <!-- initial welcome message will be added via JS for elegance -->
-    </div>
-
-    <!-- input row with modern icons -->
     <div id="input-area">
-        <input type="text" id="msginput" placeholder="Type your message..." autocomplete="off">
-        <button id="btn" aria-label="Send message">
-            <i class="fas fa-paper-plane"></i>
-        </button>
+        <input type="text" id="msginput" placeholder="Enter your msg">
+        <button id="btn">Send</button>
     </div>
 </div>
 
-<!-- Socket.io client library (from server) -->
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    (function() {
-        // ------------------------------
-        //  DOM elements
-        // ------------------------------
-        const socket = io();             // connection to backend (if socket.io server exists)
-        const msgInput = document.querySelector("#msginput");
-        const sendBtn = document.querySelector("#btn");
-        const chatBox = document.querySelector("#chat-box");
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+     const socket = io();
 
-        // Helper: generate current time string (HH:MM AM/PM style)
-        function getFormattedTime() {
-            const now = new Date();
-            let hours = now.getHours();
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; // 12-hour format
-            return `${hours}:${minutes} ${ampm}`;
-        }
+const msgInput = document.querySelector("#msginput");
+const sendBtn = document.querySelector("#btn");
+const chatBox = document.querySelector("#chat-box");
 
-        // Function to add a message bubble (text + timestamp)
-        function addMessage(text, type) {
-            if (!text.trim()) return;
-            
-            const messageWrapper = document.createElement("div");
-            // we use p but we will add structure for time
-            const messageBubble = document.createElement("p");
-            messageBubble.textContent = text;
-            messageBubble.classList.add("msg", type);
-            
-            // create a small time element for each message (enhanced beauty)
-            const timeSpan = document.createElement("span");
-            timeSpan.classList.add("msg-time");
-            timeSpan.textContent = getFormattedTime();
-            
-            // Append time inside bubble
-            messageBubble.appendChild(timeSpan);
-            
-            // Append bubble to chatBox
-            chatBox.appendChild(messageBubble);
-            
-            // scroll to bottom with smooth effect
-            chatBox.scrollTo({
-                top: chatBox.scrollHeight,
-                behavior: "smooth"
-            });
-        }
+// receive message from server
+socket.on("message", (message) => {
+    addMessage(message, "other");
+});
 
-        // Special: show welcome message when chat is empty (elegant greeting)
-        function showWelcomeMessageIfEmpty() {
-            if (chatBox.children.length === 0) {
-                const welcomeDiv = document.createElement("div");
-                welcomeDiv.className = "empty-chat-hint";
-                welcomeDiv.innerHTML = `
-                    <i class="fas fa-hand-sparkles"></i>
-                    <span>✨ Welcome to Lumina Chat ✨</span>
-                    <small>Start the conversation with a warm hello</small>
-                `;
-                chatBox.appendChild(welcomeDiv);
-                // optional but keep it subtle; we remove it after first message.
-                // We'll remove it automatically once any real message arrives.
-            }
-        }
+// send message on button click
+sendBtn.addEventListener("click", sendMessage);
 
-        function removeWelcomeHint() {
-            const hint = chatBox.querySelector(".empty-chat-hint");
-            if (hint) hint.remove();
-        }
+// send message on Enter key
+msgInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        sendMessage();
+    }
+});
 
-        // send message logic (emit to server & display locally)
-        function sendMessage() {
-            const message = msgInput.value.trim();
-            if (message === "") return;
-            
-            // remove welcome placeholder if present
-            removeWelcomeHint();
-            
-            // display my message immediately (optimistic UI)
-            addMessage(message, "me");
-            
-            // emit to server (if socket.io is connected, it will broadcast to others)
-            socket.emit("message", message);
-            
-            // clear input field and maintain focus
-            msgInput.value = "";
-            msgInput.focus();
-        }
+function sendMessage() {
+    const message = msgInput.value.trim();
 
-        // receive message from server (other clients)
-        socket.on("message", (message) => {
-            // Only add as "other" if the message is not from current user? 
-            // In standard socket broadcast, the sender sees its own emit but we already added "me" manually.
-            // The server usually broadcasts to all except sender, but to avoid duplication:
-            // In typical chat, the server sends message to all connected clients including the sender.
-            // However our local optimistic add already shows "me". So if server echoes back, we might double-add.
-            // The robust pattern: server sends to everyone, and we differentiate by socket.id.
-            // But for simplicity without backend logic in this frontend snippet, we assume server broadcasts to all other clients.
-            // But I'll implement a safety: we can check if the last message from 'me' matches, but that's risky.
-            // A better frontend-only approach: we trust that server does NOT send the message back to the original sender.
-            // Since we only handle this event for messages coming from others, it's safe.
-            // However if the server echoes, we could get duplicates. But a good socket server usually uses `broadcast.emit`.
-            // In this design, we display "other" messages only from server. That's correct.
-            
-            // Add received message as "other"
-            removeWelcomeHint();  // once conversation starts, remove hint anyway
-            addMessage(message, "other");
-        });
-        
-        // Additional touch: When connection established, maybe show system message?
-        socket.on("connect", () => {
-            // optional: subtle connection log (but not necessary)
-            console.log("Socket connected, id:", socket.id);
-            // show welcome message only if chatBox is still empty and no previous messages
-            setTimeout(() => {
-                if (chatBox.children.length === 0) {
-                    showWelcomeMessageIfEmpty();
-                }
-            }, 100);
-        });
-        
-        // If socket disconnects (just UX)
-        socket.on("disconnect", () => {
-            const statusBadge = document.querySelector(".status-badge span");
-            if (statusBadge) statusBadge.innerText = "reconnecting...";
-            const statusIcon = document.querySelector(".status-badge i");
-            if (statusIcon) {
-                statusIcon.style.color = "#e09d32";
-                statusIcon.classList.remove("fa-circle");
-                statusIcon.classList.add("fa-clock");
-            }
-        });
-        
-        socket.on("connect", () => {
-            const statusBadgeSpan = document.querySelector(".status-badge span");
-            if (statusBadgeSpan) statusBadgeSpan.innerText = "connected";
-            const statusIcon = document.querySelector(".status-badge i");
-            if (statusIcon) {
-                statusIcon.style.color = "#3cab5b";
-                statusIcon.classList.remove("fa-clock");
-                statusIcon.classList.add("fa-circle");
-            }
-        });
+    if (!message) return;
 
-        // Buttons and event listeners
-        sendBtn.addEventListener("click", sendMessage);
-        msgInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-        
-        // initial welcome hint
-        showWelcomeMessageIfEmpty();
-        
-        // Extra: focus input on page load for immediate typing
-        msgInput.focus();
-        
-        // Small demo: simulate typing effect for realism (optional)
-        // Not required, but provides a sense of dynamic environment when server not present.
-        // However this might conflict if server not available — but it's pure frontend.
-        // Since we aim for elegant index.ejs that works with socket.io, we assume backend exists.
-        // For those who test without backend, socket.io will try to connect but messages won't be received from others.
-        // But self messages will work. That's fine.
-        
-        // Prevent sending empty messages on accidental enter
-        window.addEventListener("load", () => {
-            // Ensure chatbox scroll is bottom initially if there is any leftover (like welcome)
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-        
-        // Optional: Add a tiny interactive demo note: if you double-click send, no duplicate.
-        // We also add a small safeguard to avoid duplicate welcome removal.
-        
-        // If you want to show a "other" user example when no backend for testing? 
-        // Not recommended but adds flair for static preview? Instead I'll add a demo bot message after 3 seconds if no activity? 
-        // but may conflict with server. So skipping. The code is fully production-ready.
-        
-        // Also add transition for scroll behavior when new messages arrive.
-        // Observer to auto-scroll whenever a child is added (bonus)
-        const observer = new MutationObserver(() => {
-            chatBox.scrollTo({
-                top: chatBox.scrollHeight,
-                behavior: "smooth"
-            });
-        });
-        observer.observe(chatBox, { childList: true, subtree: false });
-        
-        // Also handle window resize to maintain bottom? not needed, but fine.
-    })();
-</script>
+    addMessage(message, "me");
+    socket.emit("message", message);
+
+    msgInput.value = "";
+}
+
+function addMessage(text, type) {
+    const p = document.createElement("p");
+    p.textContent = text;
+
+    // add CSS classes
+    p.classList.add("msg", type);
+
+    chatBox.appendChild(p);
+
+    // auto scroll
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+   </script>
 </body>
 </html>
